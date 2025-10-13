@@ -1,292 +1,275 @@
-
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Employee Salary Entry</title>
-<style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f4f6f8;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        form.editing {
-            background-color: #fff8dc;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        textarea {
-            resize: vertical;
-        }
-        .form-actions {
-            grid-column: span 2;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
-        #submitBtn {
-            background-color: #3498db;
-            color: white;
-        }
-        #cancelBtn {
-            background-color: #e74c3c;
-            color: white;
-            display: none;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 30px;
-        }
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .edit-btn {
-            background-color: #f39c12;
-            color: white;
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .edit-btn:hover {
-            background-color: #e67e22;
-        }
-        @media (max-width: 600px) {
-            form {
-                grid-template-columns: 1fr;
-            }
-            .form-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Employee Salary Entry</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; color: #1f2937; }
+    h1 { margin-bottom: 12px; }
+    form, .actions { background: #f9fafb; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
+    label { display:block; margin-top: 12px; font-weight: 600; }
+    input, select, textarea, button { margin-top: 6px; padding: 8px; font-size: 14px; }
+    input[type="number"] { width: 200px; }
+    input[type="date"] { width: 200px; }
+    textarea { width: 100%; min-height: 60px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+    .btn { cursor: pointer; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+    .btn.primary { background: #2563eb; border-color:#2563eb; color:#fff; }
+    .btn.danger { background:#dc2626; border-color:#dc2626; color:#fff; }
+    .toolbar { display:flex; gap: 8px; margin-top: 12px; }
+    .muted { color:#6b7280; font-size: 12px; }
+    .right { text-align: right; }
+    .nowrap { white-space: nowrap; }
+  </style>
 </head>
 <body>
-<div class="container">
-<h1>Employee Salary Entry</h1>
-<form id="salaryForm">
-<div>
-<label for="employeeName">Employee Name</label>
-<select id="employeeName" required="">
-<option value="">Select Employee</option>
-<option value="Saunak">Saunak</option>
-<option value="Riya">Riya</option>
-<option value="Purvy">Purvy</option>
-</select>
-</div>
-<div>
-<label for="salary">Salary</label>
-<input id="salary" required="" type="number"/>
-</div>
-<div>
-<label for="date">Date (DDMMYY)</label>
-<input id="date" placeholder="DDMMYY" required="" type="text"/>
-</div>
-<div>
-<label for="note">Note</label>
-<textarea id="note" rows="3"></textarea>
-</div>
-<div class="form-actions">
-<button id="submitBtn" type="submit">Submit</button>
-<button id="cancelBtn" type="button">Cancel</button>
-</div>
-</form>
-<table id="salaryTable">
-<thead>
-<tr>
-<th>Employee Name</th>
-<th>Salary</th>
-<th>Date</th>
-<th>Note</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-</div>
-<script>
-        const form = document.getElementById('salaryForm');
-        const tableBody = document.querySelector('#salaryTable tbody');
-        const submitBtn = document.getElementById('submitBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
+  <h1>Employee Salary Entry</h1>
 
-        let editIndex = null;
+  <form id="salaryForm" autocomplete="off">
+    <input type="hidden" id="recordId" />
+    <label for="employee">Employee Name</label>
+    <select id="employee" required>
+      <option value="" disabled selected>Select Employee</option>
+      <option>Saunak</option>
+      <option>Riya</option>
+      <option>Purvy</option>
+    </select>
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('employeeName').value;
-            const salary = document.getElementById('salary').value;
-            const date = document.getElementById('date').value;
-            const note = document.getElementById('note').value;
+    <label for="salary">Salary</label>
+    <input id="salary" type="number" step="0.01" min="0" placeholder="0.00" required />
 
-            if (editIndex === null) {
-                const row = tableBody.insertRow();
-                row.insertCell(0).textContent = name;
-                row.insertCell(1).textContent = salary;
-                row.insertCell(2).textContent = date;
-                row.insertCell(3).textContent = note;
-                const actionCell = row.insertCell(4);
-                const editBtn = document.createElement('button');
-                editBtn.textContent = 'Edit';
-                editBtn.className = 'edit-btn';
-                editBtn.onclick = () => editForm(row.rowIndex - 1);
-                actionCell.appendChild(editBtn);
-            } else {
-                const row = tableBody.rows[editIndex];
-                row.cells[0].textContent = name;
-                row.cells[1].textContent = salary;
-                row.cells[2].textContent = date;
-                row.cells[3].textContent = note;
-                editIndex = null;
-                form.classList.remove('editing');
-                submitBtn.textContent = 'Submit';
-                cancelBtn.style.display = 'none';
-            }
+    <label for="date">Date</label>
+    <input id="date" type="date" required />
 
-            form.reset();
-        });
+    <label for="note">Note</label>
+    <textarea id="note" placeholder="Optional"></textarea>
 
-        cancelBtn.addEventListener('click', function() {
-            form.reset();
-            editIndex = null;
-            form.classList.remove('editing');
-            submitBtn.textContent = 'Submit';
-            cancelBtn.style.display = 'none';
-        });
+    <div class="toolbar">
+      <button type="submit" class="btn primary" id="submitBtn">Submit</button>
+      <button type="button" class="btn" id="cancelBtn">Cancel</button>
+    </div>
+    <p class="muted">Data is saved locally in your browser and also sent to Google Sheets.</p>
+  </form>
 
-        function editForm(index) {
-            const row = tableBody.rows[index];
-            document.getElementById('employeeName').value = row.cells[0].textContent;
-            document.getElementById('salary').value = row.cells[1].textContent;
-            document.getElementById('date').value = row.cells[2].textContent;
-            document.getElementById('note').value = row.cells[3].textContent;
-            editIndex = index;
-            form.classList.add('editing');
-            submitBtn.textContent = 'Update';
-            cancelBtn.style.display = 'inline-block';
-        }
-    </script>
-<button id="exportBtn">Export to CSV</button><script>
-// Load entries from localStorage on page load
-window.onload = function() {
-    const savedEntries = JSON.parse(localStorage.getItem("salaryEntries")) || [];
-    savedEntries.forEach(entry => addRowToTable(entry));
-};
+  <div class="actions toolbar">
+    <button class="btn" id="exportCsvBtn">Export to CSV</button>
+    <button class="btn danger" id="clearAllBtn">Clear All</button>
+  </div>
 
-// Save entries to localStorage
-function saveToLocalStorage() {
-    const table = document.getElementById("salaryTable");
-    const rows = table.getElementsByTagName("tr");
-    const entries = [];
-    for (let i = 1; i < rows.length; i++) {
-        const cells = rows[i].getElementsByTagName("td");
-        if (cells.length >= 4) {
-            entries.push({
-                name: cells[0].innerText,
-                salary: cells[1].innerText,
-                date: cells[2].innerText,
-                note: cells[3].innerText
-            });
-        }
+  <table>
+    <thead>
+      <tr>
+        <th>Employee Name</th>
+        <th class="right">Salary</th>
+        <th>Date</th>
+        <th>Note</th>
+        <th class="nowrap">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="recordsBody"></tbody>
+  </table>
+
+  <script>
+    // === CONFIG ===
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxrgSws9R4GFE6Kqg9pMwHOfUrmEzYbYVUgdutANr4WriwQntIjSZnpd2oVI_BIwvxS/exec';
+    const STORAGE_KEY = 'salaryRecords_v1';
+
+    /** OPTIONAL SECURITY: set a token string here and enforce it in your Apps Script (see notes below). */
+    const TOKEN = ''; // e.g., 'super-long-random-string'; leave '' if not used.
+
+    /** @type {{id:string, employee:string, salary:number, date:string, note:string}[]} */
+    let records = [];
+
+    const $ = (id) => document.getElementById(id);
+    const form = $('salaryForm');
+    const employeeEl = $('employee');
+    const salaryEl = $('salary');
+    const dateEl = $('date');
+    const noteEl = $('note');
+    const recordIdEl = $('recordId');
+    const submitBtn = $('submitBtn');
+    const cancelBtn = $('cancelBtn');
+    const exportCsvBtn = $('exportCsvBtn');
+    const clearAllBtn = $('clearAllBtn');
+    const tbody = $('recordsBody');
+
+    // --- Load & Save (LocalStorage) ---
+    function loadRecords() {
+      try { records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+      catch { records = []; }
     }
-    localStorage.setItem("salaryEntries", JSON.stringify(entries));
-}
-
-// Modify addRowToTable to call saveToLocalStorage
-function addRowToTable(entry) {
-    const table = document.getElementById("salaryTable");
-    const row = table.insertRow();
-    row.insertCell(0).innerText = entry.name;
-    row.insertCell(1).innerText = entry.salary;
-    row.insertCell(2).innerText = entry.date;
-    row.insertCell(3).innerText = entry.note;
-    const editCell = row.insertCell(4);
-    const editBtn = document.createElement("button");
-    editBtn.innerText = "Edit";
-    editBtn.onclick = function() {
-        document.getElementById("employeeName").value = entry.name;
-        document.getElementById("salary").value = entry.salary;
-        document.getElementById("date").value = entry.date;
-        document.getElementById("note").value = entry.note;
-        table.deleteRow(row.rowIndex);
-        saveToLocalStorage();
-    };
-    editCell.appendChild(editBtn);
-    saveToLocalStorage();
-}
-
-// Export table data to CSV
-document.getElementById("exportBtn").addEventListener("click", function () {
-    const table = document.getElementById("salaryTable");
-    let csvContent = "data:text/csv;charset=utf-8,";
-    for (let row of table.rows) {
-        let rowData = [];
-        for (let cell of row.cells) {
-            rowData.push(cell.innerText);
-        }
-        csvContent += rowData.join(",") + "\n";
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "salary_entries.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-});
-</script></body>
+
+    // --- Google Sheets (Apps Script) ---
+    async function saveToSheet(record) {
+      try {
+        const payload = TOKEN ? { ...record, token: TOKEN } : record;
+
+        // Use 'no-cors' to avoid CORS issues on GitHub Pages (can't read response, but it will append the row)
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        console.error('Save to Google Sheet failed:', err);
+        // We keep the local save so you don't lose data even if the network fails
+      }
+    }
+
+    // --- Helpers ---
+    function formatMoney(n) {
+      const num = Number(n ?? 0);
+      return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function resetForm() {
+      form.reset();
+      recordIdEl.value = '';
+      submitBtn.textContent = 'Submit';
+      // default date today
+      dateEl.value = new Date().toISOString().slice(0,10);
+    }
+
+    // --- Render Table ---
+    function render() {
+      tbody.innerHTML = '';
+      if (!records.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.className = 'muted';
+        td.textContent = 'No records yet.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+      records.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+
+        const tdEmp = document.createElement('td'); tdEmp.textContent = r.employee; tr.appendChild(tdEmp);
+        const tdSal = document.createElement('td'); tdSal.className = 'right'; tdSal.textContent = formatMoney(r.salary); tr.appendChild(tdSal);
+        const tdDate = document.createElement('td'); tdDate.textContent = r.date; tr.appendChild(tdDate);
+        const tdNote = document.createElement('td'); tdNote.textContent = r.note || ''; tr.appendChild(tdNote);
+
+        const tdAct = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => onEdit(idx));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn danger';
+        delBtn.style.marginLeft = '6px';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', () => onDelete(idx));
+
+        tdAct.appendChild(editBtn);
+        tdAct.appendChild(delBtn);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- Actions ---
+    function onEdit(index) {
+      const r = records[index];
+      recordIdEl.value = r.id;
+      employeeEl.value = r.employee;
+      salaryEl.value = r.salary;
+      dateEl.value = r.date;
+      noteEl.value = r.note || '';
+      submitBtn.textContent = 'Save';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function onDelete(index) {
+      if (!confirm('Delete this record?')) return;
+      records.splice(index, 1);
+      saveRecords();
+      render();
+    }
+
+    // --- Export CSV ---
+    function exportToCSV() {
+      const header = ['Employee Name', 'Salary', 'Date', 'Note'];
+      const rows = records.map(r => [
+        r.employee,
+        r.salary?.toString() ?? '',
+        r.date ?? '',
+        r.note?.replace(/\r?\n/g, ' ') ?? ''
+      ]);
+      const csv = [header, ...rows]
+        .map(row => row.map(cell => {
+          const s = (cell ?? '').toString().replace(/"/g, '""');
+          return /[",\n]/.test(s) ? `"${s}"` : s;
+        }).join(','))
+        .join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `salary_records_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // --- Init ---
+    loadRecords();
+    render();
+    dateEl.value = new Date().toISOString().slice(0,10);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const employee = employeeEl.value.trim();
+      const salary = Number(salaryEl.value);
+      const date = dateEl.value;
+      const note = noteEl.value.trim();
+
+      if (!employee || isNaN(salary) || salary < 0 || !date) {
+        alert('Please fill all required fields with valid values.');
+        return;
+      }
+
+      const existingId = recordIdEl.value;
+      let record;
+      if (existingId) {
+        // update
+        const idx = records.findIndex(r => r.id === existingId);
+        if (idx > -1) {
+          record = { id: existingId, employee, salary, date, note };
+          records[idx] = record;
+        }
+      } else {
+        // create
+        const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+        record = { id, employee, salary, date, note };
+        records.push(record);
+      }
+
+      // Save locally (instant UI)
+      saveRecords();
+      render();
+      resetForm();
+
+      // Save to Google Sheets (fire-and-forget)
+      saveToSheet({ employee, salary, date, note });
+    });
+
+    cancelBtn.addEventListener('click', resetForm);
+    exportCsvBtn.addEventListener('click', exportToCSV);
+    clearAllBtn.addEventListener('click', () => {
+      if (confirm('This will remove ALL local records. Continue?')) {
+        records = [];
+        saveRecords();
+        render();
+      }
+    });
+  </script>
+</body>
 </html>
