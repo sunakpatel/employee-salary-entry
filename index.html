@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Employee Salary Entry</title>
+<style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f6f8;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        form.editing {
+            background-color: #fff8dc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+        }
+        .form-actions {
+            grid-column: span 2;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #submitBtn {
+            background-color: #3498db;
+            color: white;
+        }
+        #cancelBtn {
+            background-color: #e74c3c;
+            color: white;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .edit-btn {
+            background-color: #f39c12;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .edit-btn:hover {
+            background-color: #e67e22;
+        }
+        @media (max-width: 600px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<h1>Employee Salary Entry</h1>
+<form id="salaryForm">
+<div>
+<label for="employeeName">Employee Name</label>
+<select id="employeeName" required="">
+<option value="">Select Employee</option>
+<option value="Saunak">Saunak</option>
+<option value="Riya">Riya</option>
+<option value="Purvy">Purvy</option>
+</select>
+</div>
+<div>
+<label for="salary">Salary</label>
+<input id="salary" required="" type="number"/>
+</div>
+<div>
+<label for="date">Date (DDMMYY)</label>
+<input id="date" placeholder="DDMMYY" required="" type="text"/>
+</div>
+<div>
+<label for="note">Note</label>
+<textarea id="note" rows="3"></textarea>
+</div>
+<div class="form-actions">
+<button id="submitBtn" type="submit">Submit</button>
+<button id="cancelBtn" type="button">Cancel</button>
+</div>
+</form>
+<table id="salaryTable">
+<thead>
+<tr>
+<th>Employee Name</th>
+<th>Salary</th>
+<th>Date</th>
+<th>Note</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<script>
+        const form = document.getElementById('salaryForm');
+        const tableBody = document.querySelector('#salaryTable tbody');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        let editIndex = null;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('employeeName').value;
+            const salary = document.getElementById('salary').value;
+            const date = document.getElementById('date').value;
+            const note = document.getElementById('note').value;
+
+            if (editIndex === null) {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = name;
+                row.insertCell(1).textContent = salary;
+                row.insertCell(2).textContent = date;
+                row.insertCell(3).textContent = note;
+                const actionCell = row.insertCell(4);
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'edit-btn';
+                editBtn.onclick = () => editForm(row.rowIndex - 1);
+                actionCell.appendChild(editBtn);
+            } else {
+                const row = tableBody.rows[editIndex];
+                row.cells[0].textContent = name;
+                row.cells[1].textContent = salary;
+                row.cells[2].textContent = date;
+                row.cells[3].textContent = note;
+                editIndex = null;
+                form.classList.remove('editing');
+                submitBtn.textContent = 'Submit';
+                cancelBtn.style.display = 'none';
+            }
+
+            form.reset();
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            form.reset();
+            editIndex = null;
+            form.classList.remove('editing');
+            submitBtn.textContent = 'Submit';
+            cancelBtn.style.display = 'none';
+        });
+
+        function editForm(index) {
+            const row = tableBody.rows[index];
+            document.getElementById('employeeName').value = row.cells[0].textContent;
+            document.getElementById('salary').value = row.cells[1].textContent;
+            document.getElementById('date').value = row.cells[2].textContent;
+            document.getElementById('note').value = row.cells[3].textContent;
+            editIndex = index;
+            form.classList.add('editing');
+            submitBtn.textContent = 'Update';
+            cancelBtn.style.display = 'inline-block';
+        }
+    </script>
+<button id="exportBtn">Export to CSV</button><script>
+// Load entries from localStorage on page load
+window.onload = function() {
+    const savedEntries = JSON.parse(localStorage.getItem("salaryEntries")) || [];
+    savedEntries.forEach(entry => addRowToTable(entry));
+};
+
+// Save entries to localStorage
+function saveToLocalStorage() {
+    const table = document.getElementById("salaryTable");
+    const rows = table.getElementsByTagName("tr");
+    const entries = [];
+    for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName("td");
+        if (cells.length >= 4) {
+            entries.push({
+                name: cells[0].innerText,
+                salary: cells[1].innerText,
+                date: cells[2].innerText,
+                note: cells[3].innerText
+            });
+        }
+    }
+    localStorage.setItem("salaryEntries", JSON.stringify(entries));
+}
+
+// Modify addRowToTable to call saveToLocalStorage
+function addRowToTable(entry) {
+    const table = document.getElementById("salaryTable");
+    const row = table.insertRow();
+    row.insertCell(0).innerText = entry.name;
+    row.insertCell(1).innerText = entry.salary;
+    row.insertCell(2).innerText = entry.date;
+    row.insertCell(3).innerText = entry.note;
+    const editCell = row.insertCell(4);
+    const editBtn = document.createElement("button");
+    editBtn.innerText = "Edit";
+    editBtn.onclick = function() {
+        document.getElementById("employeeName").value = entry.name;
+        document.getElementById("salary").value = entry.salary;
+        document.getElementById("date").value = entry.date;
+        document.getElementById("note").value = entry.note;
+        table.deleteRow(row.rowIndex);
+        saveToLocalStorage();
+    };
+    editCell.appendChild(editBtn);
+    saveToLocalStorage();
+}
+
+// Export table data to CSV
+document.getElementById("exportBtn").addEventListener("click", function () {
+    const table = document.getElementById("salaryTable");
+    let csvContent = "data:text/csv;charset=utf-8,";
+    for (let row of table.rows) {
+        let rowData = [];
+        for (let cell of row.cells) {
+            rowData.push(cell.innerText);
+        }
+        csvContent += rowData.join(",") + "\n";
+    }
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "salary_entries.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+</script></body>
+</html>
