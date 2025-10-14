@@ -1,275 +1,535 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Employee Salary Entry</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 24px; color: #1f2937; }
-    h1 { margin-bottom: 12px; }
-    form, .actions { background: #f9fafb; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
-    label { display:block; margin-top: 12px; font-weight: 600; }
-    input, select, textarea, button { margin-top: 6px; padding: 8px; font-size: 14px; }
-    input[type="number"] { width: 200px; }
-    input[type="date"] { width: 200px; }
-    textarea { width: 100%; min-height: 60px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-    th { background: #f3f4f6; }
-    .btn { cursor: pointer; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
-    .btn.primary { background: #2563eb; border-color:#2563eb; color:#fff; }
-    .btn.danger { background:#dc2626; border-color:#dc2626; color:#fff; }
-    .toolbar { display:flex; gap: 8px; margin-top: 12px; }
-    .muted { color:#6b7280; font-size: 12px; }
-    .right { text-align: right; }
-    .nowrap { white-space: nowrap; }
-  </style>
-</head>
-<body>
-  <h1>Employee Salary Entry</h1>
-
-  <form id="salaryForm" autocomplete="off">
-    <input type="hidden" id="recordId" />
-    <label for="employee">Employee Name</label>
-    <select id="employee" required>
-      <option value="" disabled selected>Select Employee</option>
-      <option>Saunak</option>
-      <option>Riya</option>
-      <option>Purvy</option>
-    </select>
-
-    <label for="salary">Salary</label>
-    <input id="salary" type="number" step="0.01" min="0" placeholder="0.00" required />
-
-    <label for="date">Date</label>
-    <input id="date" type="date" required />
-
-    <label for="note">Note</label>
-    <textarea id="note" placeholder="Optional"></textarea>
-
-    <div class="toolbar">
-      <button type="submit" class="btn primary" id="submitBtn">Submit</button>
-      <button type="button" class="btn" id="cancelBtn">Cancel</button>
-    </div>
-    <p class="muted">Data is saved locally in your browser and also sent to Google Sheets.</p>
-  </form>
-
-  <div class="actions toolbar">
-    <button class="btn" id="exportCsvBtn">Export to CSV</button>
-    <button class="btn danger" id="clearAllBtn">Clear All</button>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Employee Name</th>
-        <th class="right">Salary</th>
-        <th>Date</th>
-        <th>Note</th>
-        <th class="nowrap">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="recordsBody"></tbody>
-  </table>
-
-  <script>
-    // === CONFIG ===
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxrgSws9R4GFE6Kqg9pMwHOfUrmEzYbYVUgdutANr4WriwQntIjSZnpd2oVI_BIwvxS/exec';
-    const STORAGE_KEY = 'salaryRecords_v1';
-
-    /** OPTIONAL SECURITY: set a token string here and enforce it in your Apps Script (see notes below). */
-    const TOKEN = ''; // e.g., 'super-long-random-string'; leave '' if not used.
-
-    /** @type {{id:string, employee:string, salary:number, date:string, note:string}[]} */
-    let records = [];
-
-    const $ = (id) => document.getElementById(id);
-    const form = $('salaryForm');
-    const employeeEl = $('employee');
-    const salaryEl = $('salary');
-    const dateEl = $('date');
-    const noteEl = $('note');
-    const recordIdEl = $('recordId');
-    const submitBtn = $('submitBtn');
-    const cancelBtn = $('cancelBtn');
-    const exportCsvBtn = $('exportCsvBtn');
-    const clearAllBtn = $('clearAllBtn');
-    const tbody = $('recordsBody');
-
-    // --- Load & Save (LocalStorage) ---
-    function loadRecords() {
-      try { records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-      catch { records = []; }
+    :root{
+      --bg: #0b0c0f;
+      --panel: #141821;
+      --muted: #6c7a91;
+      --text: #e6e9ef;
+      --brand: #6aa2ff;
+      --brand-600:#4d89f0;
+      --accent: #06d6a0;
+      --danger: #ff6b6b;
+      --border: #222b3a;
+      --ring: 0 0 0 3px color-mix(in srgb, var(--brand) 30%, transparent);
+      --radius: 12px;
+      --gap: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
     }
-    function saveRecords() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    }
-
-    // --- Google Sheets (Apps Script) ---
-    async function saveToSheet(record) {
-      try {
-        const payload = TOKEN ? { ...record, token: TOKEN } : record;
-
-        // Use 'no-cors' to avoid CORS issues on GitHub Pages (can't read response, but it will append the row)
-        await fetch(WEB_APP_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      } catch (err) {
-        console.error('Save to Google Sheet failed:', err);
-        // We keep the local save so you don't lose data even if the network fails
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --muted: #5b687a;
+        --text: #1c2430;
+        --brand: #2962ff;
+        --brand-600:#1e4fdb;
+        --accent: #10b981;
+        --danger: #ef4444;
+        --border: #e5e7eb;
+        --shadow: 0 10px 25px rgba(30,41,59,.08);
       }
     }
 
-    // --- Helpers ---
-    function formatMoney(n) {
-      const num = Number(n ?? 0);
-      return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    /* Base */
+    *, *::before, *::after { box-sizing: border-box; }
+    html,body{height:100%}
+    body{
+      margin:0; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1000px 700px at 10% -20%, rgba(106,162,255,.15), transparent) , var(--bg);
+      color: var(--text);
     }
-    function resetForm() {
-      form.reset();
-      recordIdEl.value = '';
-      submitBtn.textContent = 'Submit';
-      // default date today
-      dateEl.value = new Date().toISOString().slice(0,10);
+    .container{
+      max-width: 1100px; margin: 32px auto; padding: 0 16px;
     }
 
-    // --- Render Table ---
-    function render() {
+    header{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 20px;
+    }
+    .title{
+      display:flex; align-items:center; gap:12px;
+    }
+    .title h1{font-size: clamp(22px, 3vw, 28px); margin:0}
+    .subtitle{color:var(--muted); margin:4px 0 0; font-size:14px}
+    .badge{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background: color-mix(in srgb, var(--brand) 12%, var(--panel));
+      border:1px solid var(--border); color: var(--muted); font-size:13px;
+    }
+    .badge svg{width:16px; height:16px}
+
+    .grid{
+      display:grid; grid-template-columns: 1fr; gap: var(--gap);
+    }
+    @media (min-width: 840px){
+      .grid{ grid-template-columns: 380px 1fr; }
+    }
+
+    .card{
+      background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .card h2{
+      font-size: 16px; margin:0; padding: 14px 16px; border-bottom:1px solid var(--border); color: var(--muted);
+    }
+    .card .body{ padding:16px; }
+
+    /* Form */
+    .form-row{ display:grid; grid-template-columns: 1fr; gap:12px; margin-bottom: 12px; }
+    @media (min-width: 520px){
+      .form-row.two{
+        grid-template-columns: 1fr 1fr;
+        gap: 20px; /* Increased spacing between Salary & Date */
+      }
+    }
+    label{ display:block; font-size:13px; color:var(--muted); margin:0 0 6px; }
+    select, input[type="text"], input[type="number"], input[type="date"], textarea{
+      width:100%; padding:12px 12px; border-radius:10px; border:1px solid var(--border); background: color-mix(in srgb, var(--panel) 96%, #000 0%);
+      color: var(--text); outline: none; transition: box-shadow .12s ease, border-color .12s ease;
+    }
+    select:focus, input:focus, textarea:focus{ border-color: var(--brand); box-shadow: var(--ring); }
+    textarea{
+      min-height:90px; resize: vertical;
+      max-width: 100%; /* keeps it inside form */
+      width: 100%;
+      overflow-wrap: break-word;
+    }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+
+    .btn{
+      --btn-bg: var(--brand); --btn-bg-h: var(--brand-600); --btn-fg:#fff; --btn-bd: transparent;
+      display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; border:1px solid var(--btn-bd);
+      background: var(--btn-bg); color: var(--btn-fg); font-weight:600; cursor:pointer; transition: transform .06s ease, background .15s ease, opacity .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ background: var(--btn-bg-h); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.secondary{ --btn-bg: transparent; --btn-fg: var(--text); --btn-bd: var(--border); }
+    .btn.ghost{ --btn-bg: transparent; --btn-fg: var(--muted); --btn-bd: transparent; }
+    .btn.danger{ --btn-bg: color-mix(in srgb, var(--danger) 92%, black 8%); --btn-bg-h: var(--danger); }
+
+    /* Toolbar */
+    .toolbar{
+      display:flex; align-items:center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom:1px solid var(--border);
+    }
+    .search{
+      display:flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:999px; padding: 8px 12px; width: min(380px, 100%);
+      background: color-mix(in srgb, var(--panel) 96%, #000 0%);
+    }
+    .search input{ flex:1; background: transparent; border:0; outline:none; color: var(--text); }
+    .toolbar .btn{ white-space: nowrap; }
+
+    /* Table / Cards */
+    table{ width:100%; border-collapse: collapse; }
+    th, td{ padding: 12px 14px; border-bottom:1px solid var(--border); text-align:left; }
+    th{ font-size:13px; color:var(--muted); font-weight:600; position: sticky; top:0; background: var(--panel); z-index: 1; }
+    tbody tr:hover{ background: color-mix(in srgb, var(--panel) 92%, #000 8%); }
+    .cell-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .pill{
+      font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: color-mix(in srgb, var(--accent) 80%, #fff);
+      border:1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); padding:4px 8px; border-radius:999px; font-size:12px;
+    }
+
+    /* Mobile card layout */
+    @media (max-width: 700px){
+      table, thead, tbody, th, td, tr{ display:block; }
+      thead{ display:none; }
+      tbody tr{ border:1px solid var(--border); border-radius: 10px; margin: 10px 10px 12px; overflow: hidden; }
+      tbody td{
+        display:grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: center; border-bottom:1px solid var(--border);
+      }
+      tbody td:last-child{ border-bottom:0; }
+      tbody td::before{
+        content: attr(data-label); font-size:12px; color: var(--muted);
+      }
+      .cell-actions{ padding: 8px 0; }
+    }
+
+    /* Toasts */
+    .toast{
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(20px);
+      opacity: 0; background: var(--panel); border:1px solid var(--border); color: var(--text);
+      padding: 10px 14px; border-radius: 999px; box-shadow: var(--shadow); transition: opacity .2s ease, transform .2s ease;
+      pointer-events:none; z-index: 1000;
+    }
+    .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Small helpers */
+    .mono{ font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .empty{
+      display:flex; align-items:center; justify-content:center; padding: 24px; color: var(--muted);
+    }
+    .note{ font-size: 13px; color: var(--muted); margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 7a2 2 0 0 1 2-2h3l1-2h4l1 2h3a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 11h8M8 15h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h1>Employee Salary Entry</h1>
+          <p class="subtitle">Fast, friendly entry with local autosave and CSV export.</p>
+        </div>
+      </div>
+      <div class="badge" title="Data is saved locally and can also be sent to Google Sheets">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 5h10l6 6v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M14 5v5h5" stroke="currentColor" stroke-width="1.4"/>
+        </svg>
+        Local save + Sheets ready
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ENTRY FORM -->
+      <section class="card" aria-labelledby="formTitle">
+        <h2 id="formTitle">Add / Edit Entry</h2>
+        <div class="body">
+          <form id="entryForm" novalidate>
+            <input type="hidden" id="entryId" />
+            <div class="form-row">
+              <div>
+                <label for="employee">Employee Name <span aria-hidden="true">*</span></label>
+                <select id="employee" name="employee" required>
+                  <option value="" disabled selected>Select Employee</option>
+                  <option>Saunak</option>
+                  <option>Riya</option>
+                  <option>Purvy</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row two">
+              <div>
+                <label for="salary">Salary <span aria-hidden="true">*</span></label>
+                <input id="salary" name="salary" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required />
+              </div>
+              <div>
+                <label for="date">Date <span aria-hidden="true">*</span></label>
+                <input id="date" name="date" type="date" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label for="note">Note</label>
+                <textarea id="note" name="note" placeholder="Optional note…"></textarea>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn" id="submitBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span id="submitLabel">Save Entry</span>
+              </button>
+              <button type="button" class="btn secondary" id="resetBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9v3M3 3v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Reset Form
+              </button>
+            </div>
+
+            <p class="note">Data is saved locally in your browser and can also be sent to Google Sheets (optional).</p>
+          </form>
+        </div>
+      </section>
+
+      <!-- TABLE -->
+      <section class="card" aria-labelledby="tableTitle">
+        <div class="toolbar">
+          <h2 id="tableTitle" style="margin:0; font-size:16px; color:var(--muted)">Entries</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <div class="search" role="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <input id="q" type="search" placeholder="Search entries…" aria-label="Search entries" />
+            </div>
+            <button class="btn ghost" id="exportCsvBtn" title="Export visible entries to CSV">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Export CSV
+            </button>
+            <!-- Clear All button intentionally removed -->
+          </div>
+        </div>
+
+        <div class="body" style="padding:0">
+          <table aria-describedby="tableTitle" id="entriesTable">
+            <thead>
+              <tr>
+                <th scope="col">Employee Name</th>
+                <th scope="col">Salary</th>
+                <th scope="col">Date</th>
+                <th scope="col">Note</th>
+                <th scope="col" style="width:160px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="entriesBody">
+              <tr class="empty"><td colspan="5">No entries yet. Add your first one!</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" id="toast"></div>
+
+  <script>
+    // ========= CONFIG =========
+    // If you want to send each submission to Google Sheets,
+    // deploy an Apps Script Web App and paste its URL here:
+    // e.g., const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+    const GOOGLE_SHEETS_WEB_APP_URL = ''; // ← leave blank to disable
+
+    // ========= UTILITIES =========
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    const toISODate = (d) => new Date(d).toISOString().slice(0,10);
+
+    // INR with Indian numbering system (₹1,23,456.00)
+    const formatMoney = (n) =>
+      new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 2
+      }).format(Number(n || 0));
+
+    function showToast(msg){
+      const t = $('#toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // ========= STORAGE =========
+    const LS_KEY = 'salaryEntries:v2';
+    function loadEntries(){
+      try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
+      catch { return []; }
+    }
+    function saveEntries(entries){
+      localStorage.setItem(LS_KEY, JSON.stringify(entries));
+    }
+
+    // ========= STATE =========
+    let entries = loadEntries();
+    let editingId = null;
+    let query = '';
+
+    // ========= DOM =========
+    const form = $('#entryForm');
+    const employee = $('#employee');
+    const salary = $('#salary');
+    const dateInput = $('#date');
+    const note = $('#note');
+    const entryId = $('#entryId');
+    const submitBtn = $('#submitBtn');
+    const submitLabel = $('#submitLabel');
+    const resetBtn = $('#resetBtn');
+    const q = $('#q');
+    const tbody = $('#entriesBody');
+    const exportBtn = $('#exportCsvBtn');
+
+    // Initialize date default to today
+    dateInput.value = toISODate(new Date());
+
+    // ========= RENDER =========
+    function render(){
+      const filtered = entries
+        .filter(e => {
+          if(!query) return true;
+          const str = (e.employee + ' ' + e.salary + ' ' + e.date + ' ' + (e.note||'')).toLowerCase();
+          return str.includes(query.toLowerCase());
+        })
+        .sort((a,b) => b.date.localeCompare(a.date)); // Newest first
+
       tbody.innerHTML = '';
-      if (!records.length) {
+
+      if(filtered.length === 0){
         const tr = document.createElement('tr');
+        tr.className = 'empty';
         const td = document.createElement('td');
         td.colSpan = 5;
-        td.className = 'muted';
-        td.textContent = 'No records yet.';
+        td.textContent = query ? 'No entries match your search.' : 'No entries yet. Add your first one!';
         tr.appendChild(td);
         tbody.appendChild(tr);
         return;
       }
-      records.forEach((r, idx) => {
+
+      for(const e of filtered){
         const tr = document.createElement('tr');
+        const c1 = td('Employee Name', e.employee);
+        const c2 = td('Salary', formatMoney(e.salary), 'mono pill');
+        const c3 = td('Date', e.date);
+        const c4 = td('Note', e.note || '—', e.note ? '' : 'muted');
 
-        const tdEmp = document.createElement('td'); tdEmp.textContent = r.employee; tr.appendChild(tdEmp);
-        const tdSal = document.createElement('td'); tdSal.className = 'right'; tdSal.textContent = formatMoney(r.salary); tr.appendChild(tdSal);
-        const tdDate = document.createElement('td'); tdDate.textContent = r.date; tr.appendChild(tdDate);
-        const tdNote = document.createElement('td'); tdNote.textContent = r.note || ''; tr.appendChild(tdNote);
+        const c5 = document.createElement('td');
+        c5.className = 'cell-actions';
+        c5.setAttribute('data-label', 'Actions');
 
-        const tdAct = document.createElement('td');
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn';
-        editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => onEdit(idx));
+        const editBtn = actionBtn('Edit', editIcon(), () => startEdit(e.id));
+        const delBtn = actionBtn('Delete', trashIcon(), () => deleteEntry(e.id));
+        delBtn.classList.add('danger');
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn danger';
-        delBtn.style.marginLeft = '6px';
-        delBtn.textContent = 'Delete';
-        delBtn.addEventListener('click', () => onDelete(idx));
+        c5.append(editBtn, delBtn);
 
-        tdAct.appendChild(editBtn);
-        tdAct.appendChild(delBtn);
-        tr.appendChild(tdAct);
+        tr.append(c1,c2,c3,c4,c5);
         tbody.appendChild(tr);
-      });
+      }
     }
 
-    // --- Actions ---
-    function onEdit(index) {
-      const r = records[index];
-      recordIdEl.value = r.id;
-      employeeEl.value = r.employee;
-      salaryEl.value = r.salary;
-      dateEl.value = r.date;
-      noteEl.value = r.note || '';
-      submitBtn.textContent = 'Save';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    function td(label, text, extraClass=''){
+      const td = document.createElement('td');
+      td.setAttribute('data-label', label);
+      if(extraClass) td.className = extraClass;
+      td.textContent = text;
+      return td;
     }
 
-    function onDelete(index) {
-      if (!confirm('Delete this record?')) return;
-      records.splice(index, 1);
-      saveRecords();
-      render();
+    function actionBtn(label, icon, onClick){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn secondary';
+      btn.style.padding = '8px 10px';
+      btn.innerHTML = icon + '<span>'+label+'</span>';
+      btn.addEventListener('click', onClick);
+      return btn;
     }
 
-    // --- Export CSV ---
-    function exportToCSV() {
-      const header = ['Employee Name', 'Salary', 'Date', 'Note'];
-      const rows = records.map(r => [
-        r.employee,
-        r.salary?.toString() ?? '',
-        r.date ?? '',
-        r.note?.replace(/\r?\n/g, ' ') ?? ''
-      ]);
-      const csv = [header, ...rows]
-        .map(row => row.map(cell => {
-          const s = (cell ?? '').toString().replace(/"/g, '""');
-          return /[",\n]/.test(s) ? `"${s}"` : s;
-        }).join(','))
-        .join('\n');
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `salary_records_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(a.href);
+    function editIcon(){
+      return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.06 4.94l3.75 3.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+    }
+    function trashIcon(){
+      return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     }
 
-    // --- Init ---
-    loadRecords();
-    render();
-    dateEl.value = new Date().toISOString().slice(0,10);
-
+    // ========= CRUD =========
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const employee = employeeEl.value.trim();
-      const salary = Number(salaryEl.value);
-      const date = dateEl.value;
-      const note = noteEl.value.trim();
-
-      if (!employee || isNaN(salary) || salary < 0 || !date) {
-        alert('Please fill all required fields with valid values.');
+      // Basic validation
+      if(!employee.value || !salary.value || !dateInput.value){
+        showToast('Please fill all required fields.');
         return;
       }
 
-      const existingId = recordIdEl.value;
-      let record;
-      if (existingId) {
-        // update
-        const idx = records.findIndex(r => r.id === existingId);
-        if (idx > -1) {
-          record = { id: existingId, employee, salary, date, note };
-          records[idx] = record;
-        }
-      } else {
-        // create
-        const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-        record = { id, employee, salary, date, note };
-        records.push(record);
-      }
+      const data = {
+        id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        employee: employee.value.trim(),
+        salary: Number(salary.value),
+        date: toISODate(dateInput.value),
+        note: note.value.trim()
+      };
 
-      // Save locally (instant UI)
-      saveRecords();
+      if(editingId){
+        const idx = entries.findIndex(x => x.id === editingId);
+        if(idx > -1) entries[idx] = data;
+        showToast('Entry updated');
+      }else{
+        entries.push(data);
+        showToast('Entry added');
+      }
+      saveEntries(entries);
       render();
+      await sendToGoogleSheetsIfConfigured(data);
       resetForm();
-
-      // Save to Google Sheets (fire-and-forget)
-      saveToSheet({ employee, salary, date, note });
     });
 
-    cancelBtn.addEventListener('click', resetForm);
-    exportCsvBtn.addEventListener('click', exportToCSV);
-    clearAllBtn.addEventListener('click', () => {
-      if (confirm('This will remove ALL local records. Continue?')) {
-        records = [];
-        saveRecords();
+    function startEdit(id){
+      const e = entries.find(x => x.id === id);
+      if(!e) return;
+      editingId = id;
+      entryId.value = id;
+      employee.value = e.employee;
+      salary.value = e.salary;
+      dateInput.value = e.date;
+      note.value = e.note || '';
+      submitLabel.textContent = 'Update Entry';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteEntry(id){
+      const e = entries.find(x => x.id === id);
+      if(!e) return;
+      if(confirm(`Delete salary entry for "${e.employee}" on ${e.date}?`)){
+        entries = entries.filter(x => x.id !== id);
+        saveEntries(entries);
         render();
+        showToast('Entry deleted');
       }
+    }
+
+    function resetForm(){
+      editingId = null;
+      entryId.value = '';
+      form.reset();
+      dateInput.value = toISODate(new Date());
+      submitLabel.textContent = 'Save Entry';
+    }
+
+    resetBtn.addEventListener('click', resetForm);
+
+    // ========= SEARCH =========
+    q.addEventListener('input', () => {
+      query = q.value.trim();
+      render();
     });
+
+    // ========= EXPORT CSV =========
+    exportBtn.addEventListener('click', () => {
+      const filtered = entries.filter(e => {
+        if(!query) return true;
+        const str = (e.employee + ' ' + e.salary + ' ' + e.date + ' ' + (e.note||'')).toLowerCase();
+        return str.includes(query.toLowerCase());
+      });
+
+      if(filtered.length === 0){ showToast('Nothing to export'); return; }
+
+      const rows = [
+        ['Employee Name','Salary (INR)','Date','Note'],
+        ...filtered.map(e => [e.employee, e.salary, e.date, e.note||''])
+      ];
+      const csv = rows.map(r => r.map(s => csvEscape(String(s))).join(',')).join('\r\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `salary_entries_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('CSV exported');
+    });
+
+    function csvEscape(s){
+      if(s.includes('"') || s.includes(',') || s.includes('\n')){
+        return '"' + s.replace(/"/g,'""') + '"';
+      }
+      return s;
+    }
+
+    // ========= GOOGLE SHEETS =========
+    async function sendToGoogleSheetsIfConfigured(entry){
+      if(!GOOGLE_SHEETS_WEB_APP_URL) return; // Not configured
+      try{
+        await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors', // Many Apps Script setups require no-cors for anonymous exec
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        });
+        // With no-cors we cannot read response; assume success.
+      }catch(err){
+        console.warn('Sheets sync failed:', err);
+        // Non-blocking; local data remains
+      }
+    }
+
+    // ========= INIT =========
+    render();
+    // Add keyboard Enter shortcut on search to blur (helpful on mobile)
+    q.addEventListener('keydown', (e)=>{ if(e.key==='Enter') q.blur(); });
   </script>
 </body>
-</html>
