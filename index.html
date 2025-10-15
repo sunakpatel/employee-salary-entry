@@ -270,7 +270,6 @@
 <h2 id="tableTitle" style="margin:0; font-size:16px; color:var(--muted)">Entries<a href="https://docs.google.com/spreadsheets/d/1dg8AvquK5ip5fVnkYxiG-o0mg9neMmXLKlZWwG4MYuU/edit?gid=0#gid=0" style="margin-left:10px;" target="_blank"><img alt="Google Sheets" src="https://www.gstatic.com/images/branding/product/1x/sheets_48dp.png" style="width:24px;height:24px;vertical-align:middle;"/></a></h2>
           <div style="display:flex; gap:10px; align-items:center;">
             <div style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0;">
-  <strong>Entries:</strong>
   <span id="entryCount"
         style="display:inline-block;min-width:2ch;padding:.15rem .4rem;border-radius:999px;background:#eef2ff;color:#1f2937;font-weight:600;text-align:center;">
     0
@@ -459,55 +458,31 @@
     render();
     q.addEventListener('keydown', (e)=>{ if(e.key==='Enter') q.blur(); });
   </script>
+ 
   <script>
-  (function () {
-    // Returns true if the row is not hidden via CSS or [hidden] attribute.
-    function isVisibleRow(tr) {
-      if (tr.hidden) return false;
-      const style = getComputedStyle(tr);
-      return style.display !== 'none' && style.visibility !== 'hidden';
-    }
+  // Counts only real data rows (ignores header row and any placeholder row with colspan).
+  function updateEntryCount() {
+    const table = document.querySelector('table');
+    if (!table) return;
 
-    function locateEntriesTable() {
-      // Prefer the table inside the same card; fall back to the first table on the page.
-      return document.querySelector('section.card table') || document.querySelector('table');
-    }
+    const allRows = Array.from(table.querySelectorAll('tr'));
+    // Skip the header (first row), then exclude rows that contain a single cell spanning all columns.
+    const dataRows = allRows.slice(1).filter(tr => !tr.querySelector('td[colspan]'));
 
-    function updateEntryCount() {
-      const table = locateEntriesTable();
-      const badge = document.getElementById('entryCountBadge');
-      if (!table || !badge) return;
+    const countEl = document.getElementById('entryCount');
+    if (countEl) countEl.textContent = dataRows.length;
+  }
 
-      const rows = Array.from(table.querySelectorAll('tr'));
+  document.addEventListener('DOMContentLoaded', () => {
+    updateEntryCount();
 
-      // Skip header (first row) and ignore a placeholder row that uses colspan (e.g., "No entries yet...")
-      const dataRows = rows
-        .slice(1)
-        .filter(tr => !tr.querySelector('td[colspan]'))
-        .filter(isVisibleRow); // counts only visible rows (respects filtering, if any)
-
-      badge.textContent = dataRows.length;
-    }
-
-    function setupObservers() {
-      const table = locateEntriesTable();
-      if (!table) return;
-
-      // Update when rows are added/removed/changed
+    // If rows get added/removed dynamically, keep the number in sync:
+    const table = document.querySelector('table');
+    if (table) {
       const observer = new MutationObserver(updateEntryCount);
-      observer.observe(table.tBodies[0] || table, { childList: true, subtree: true });
-
-      // Update when user types in the search box (if present)
-      const q = document.getElementById('q');
-      if (q) q.addEventListener('input', updateEntryCount);
+      observer.observe(table, { childList: true, subtree: true });
     }
-
-    // Initial run
-    document.addEventListener('DOMContentLoaded', () => {
-      updateEntryCount();
-      setupObservers();
-    });
-  })();
-</script> 
+  });
+</script>
 </body>
 </html>
