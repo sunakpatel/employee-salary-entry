@@ -7,6 +7,35 @@
   <meta name="color-scheme" content="light dark" />
   <style>
     /* ====== Colorful but professional theme ====== */
+    /* Scroll container: vertical only */
+.table-scroll {
+  overflow-y: auto;     /* vertical scroll when needed */
+  overflow-x: hidden;   /* no horizontal scroll */
+}
+
+/* Make table fit container without horizontal overflow */
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;          /* prevents overflow; respects fixed Actions column */
+}
+
+.table-scroll th,
+.table-scroll td {
+  padding: 8px 10px;
+  white-space: normal;          /* allow wrapping */
+  overflow-wrap: anywhere;      /* break long words/URLs to avoid horizontal scroll */
+  word-break: break-word;
+}
+
+/* Sticky header */
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface, #fff);
+  z-index: 1;
+  box-shadow: 0 1px 0 var(--border, #e5e7eb);
+}
     :root{
       /* Base */
       --bg: #0b0f14;
@@ -292,22 +321,24 @@
           </div>
         </div>
 
-        <div class="body" style="padding:0">
-          <table aria-describedby="tableTitle" id="entriesTable">
-            <thead>
-              <tr>
-                <th scope="col">Employee Name</th>
-                <th scope="col">Salary</th>
-                <th scope="col">Date</th>
-                <th scope="col">Note</th>
-                <th scope="col" style="width:160px">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="entriesBody">
-              <tr class="empty"><td colspan="5">No entries yet. Add your first one!</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="body" style="padding:0">
+  <div class="table-scroll" id="entriesScrollRegion" role="region" aria-labelledby="tableTitle" tabindex="0">
+    <table aria-describedby="tableTitle" id="entriesTable">
+      <thead>
+        <tr>
+          <th scope="col">Employee Name</th>
+          <th scope="col">Salary</th>
+          <th scope="col">Date</th>
+          <th scope="col">Note</th>
+          <th scope="col" style="width:160px">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="entriesBody">
+        <tr class="empty"><td colspan="5">No entries yet. Add your first one!</td></tr>
+      </tbody>
+    </table>
+  </div>
+
       </section>
     </div>
   </div>
@@ -485,6 +516,88 @@
       observer.observe(table, { childList: true, subtree: true });
     }
   });
+</script>
+
+  <script>
+  (function () {
+    // Treat a row as "visible" if it's not hidden via CSS or the [hidden] attribute.
+    function isVisibleRow(tr) {
+      if (!tr) return false;
+      if (tr.hidden) return false;
+      const s = getComputedStyle(tr);
+      return s.display !== 'none' && s.visibility !== 'hidden';
+    }
+
+    // Get all visible, real data rows (skip placeholder colspan row)
+    function getVisibleDataRows(table) {
+      const body = table.tBodies[0];
+      if (!body) return [];
+      return Array.from(body.rows).filter(tr => {
+        const isPlaceholder = !!tr.querySelector('td[colspan]');
+        return !isPlaceholder && isVisibleRow(tr);
+      });
+    }
+
+    // Set scroll container height so that it shows header + first 5 visible rows.
+    function applyVerticalScrollByCount() {
+      const container = document.getElementById('entriesScrollRegion');
+      const table = document.getElementById('entriesTable');
+      if (!container || !table) return;
+
+      const visibleRows = getVisibleDataRows(table);
+
+      if (visibleRows.length > 5) {
+        // Measure the header height
+        const thead = table.tHead;
+        const headerH = thead ? thead.getBoundingClientRect().height : 0;
+
+        // Sum heights of the first 5 visible rows (supports multi-line cells)
+        let rowsH = 0;
+        for (let i = 0; i < Math.min(5, visibleRows.length); i++) {
+          rowsH += visibleRows[i].getBoundingClientRect().height;
+        }
+
+        // A tiny buffer for borders (adjust if needed)
+        const buffer = 2;
+
+        container.style.maxHeight = Math.ceil(headerH + rowsH + buffer) + 'px';
+        container.style.overflowY = 'auto';   // vertical scroll
+      } else {
+        // Fewer than or equal to 5 rows: let the table grow naturally (no scroll)
+        container.style.maxHeight = '';
+        container.style.overflowY = 'visible';
+      }
+    }
+
+    function setupObservers() {
+      const table = document.getElementById('entriesTable');
+      if (table) {
+        // Watch for row add/remove and style changes that affect visibility
+        const obs = new MutationObserver(applyVerticalScrollByCount);
+        obs.observe(table.tBodies[0] || table, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'hidden', 'class']
+        });
+      }
+
+      // Recalculate when searching
+      const q = document.getElementById('q');
+      if (q) q.addEventListener('input', () => {
+        // wait a frame if your search code hides rows asynchronously
+        requestAnimationFrame(applyVerticalScrollByCount);
+      });
+
+      // Recalculate on resize (row heights can change with wrapping)
+      window.addEventListener('resize', applyVerticalScrollByCount);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      applyVerticalScrollByCount();
+      setupObservers();
+    });
+  })();
 </script>
 </body>
 </html>
