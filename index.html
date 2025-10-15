@@ -6,6 +6,26 @@
   <title>Jay Sikotar Enterprise</title>
   <meta name="color-scheme" content="light dark" />
   <style>
+    
+    /* Ensure native table layout so colspan works correctly */
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* fine to keep; does not break colspan */
+}
+
+.table-scroll thead { display: table-header-group; }
+.table-scroll tbody { display: table-row-group; }
+.table-scroll tr    { display: table-row; }
+.table-scroll th,
+.table-scroll td    { display: table-cell; }
+
+/* Optional: nice styling for the empty state row */
+#entriesBody tr.empty td[colspan] {
+  text-align: center;
+  color: var(--muted, #6b7280);
+  padding: 16px;
+}
     /* ====== Colorful but professional theme ====== */
     /* Scroll container: vertical only */
 .table-scroll {
